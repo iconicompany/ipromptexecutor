@@ -27,11 +27,9 @@ const jobDescriptionDevOps = `DevOps Senior
 `;
 
 describe("TraceLoopPromptExecutor", () => {
-  let executor: TraceLoopPromptExecutor;
-
   beforeAll(async () => {
     traceloop.initialize({
-      appName: "promptexexutortest",
+      appName: "promptexecutortest",
       apiKey: process.env.TRACELOOP_API_KEY,
       disableBatch: true,
       traceloopSyncEnabled: true,
@@ -43,10 +41,11 @@ describe("TraceLoopPromptExecutor", () => {
     await traceloop.waitForInitialization();
 
     // Instantiate the class which uses the mocked OpenAI
-    executor = new TraceLoopPromptExecutor();
   });
 
-  it("should execute a prompt without properties and return the content", async () => {
+  it("should execute a prompt extractSearchFromJob and return the content", async () => {
+    const executor = new TraceLoopPromptExecutor();
+
     const promptName = "extractSearchFromJob";
 
     const variables = { jobDescription: jobDescriptionDevOps };
