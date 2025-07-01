@@ -25,7 +25,7 @@ describe("TraceLoopPromptExecutor", () => {
 
   it("should execute a prompt without properties and return the content", async () => {
     const promptName = "extractSearchFromJob";
-    const jobDescription = `🟢  DevOps Senior
+    const jobDescription = `DevOps Senior
 
 Требования:
 ●Spark

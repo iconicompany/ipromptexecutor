@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "promptexecutor",
+      "name": "ipromptexecutor",
       "dependencies": {
         "@traceloop/node-server-sdk": "^0.13.5",
         "openai": "^5.8.2",

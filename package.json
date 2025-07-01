@@ -1,8 +1,12 @@
 {
-  "name": "promptexecutor",
-  "module": "index.ts",
+  "name": "ipromptexecutor",
+  "version": "1.0.0",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run"
   },
