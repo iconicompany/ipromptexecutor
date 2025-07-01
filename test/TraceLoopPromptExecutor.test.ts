@@ -93,4 +93,45 @@ describe("TraceLoopPromptExecutor", () => {
       expect(result.Terraform).toBe(1);
     }
   });
+  it("should execute a prompt parseJob and return the content", async () => {
+    const executor = new TraceLoopPromptExecutor();
+
+    const promptName = "parseJob";
+    const modelName = process.env.OPENAI_MODEL;
+
+    const variables = { jobDescription: jobDescriptionDevOps };
+
+    const result = await executor.execute<any>(
+      promptName,
+      variables,
+      modelName,
+      new JsonParser()
+    );
+
+    expect(result).not.toBeNull();
+    // The AI's response can be non-deterministic, so we check for key structural elements and values.
+    if (result) {
+      expect(result).toHaveProperty("job");
+      const { job } = result;
+      expect(job.specialization).toBe("DevOps");
+      expect(job.grades).toEqual(expect.arrayContaining(["Senior"]));
+      expect(job.mandatoryRequirements).toEqual(
+        expect.arrayContaining([
+          "Spark",
+          "Kubernetes",
+          "Docker - от 2х лет",
+          "Terraform - от 1 года",
+        ])
+      );
+      // expect(job.additionalRequirements).toEqual(
+      //   expect.arrayContaining(["Средства ML: sklearn, tensorflow будут плюсом"])
+      // );
+      expect(job.projectTasks).toEqual(
+        expect.arrayContaining([
+          "Разработка CI/CD конвейеров.",
+          "Миграция из Managed Service в собственные Kubernetes",
+        ])
+      );
+    }
+  });
 });
