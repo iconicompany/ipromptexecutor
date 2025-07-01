@@ -79,7 +79,7 @@ describe.skip("TraceLoopPromptExecutor", () => {
     const promptName = "test-prompt";
     const variables = { name: "World" };
 
-    const result = await executor.execute(promptName, variables);
+    const result = await executor.execute<string>(promptName, variables);
 
     expect(traceloop.getPrompt).toHaveBeenCalledWith(promptName, variables);
     expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(mockPrompt);
@@ -92,7 +92,7 @@ describe.skip("TraceLoopPromptExecutor", () => {
     const variables = { name: "World" };
     const properties = { userId: "123" };
 
-    const result = await executor.execute(
+    const result = await executor.execute<string>(
       promptName,
       variables,
       undefined,
@@ -113,7 +113,7 @@ describe.skip("TraceLoopPromptExecutor", () => {
     const variables = { name: "World" };
     const model = "gpt-4";
 
-    await executor.execute(promptName, variables, model);
+    await executor.execute<string>(promptName, variables, model);
 
     const expectedPrompt = { ...mockPrompt, model };
     expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(

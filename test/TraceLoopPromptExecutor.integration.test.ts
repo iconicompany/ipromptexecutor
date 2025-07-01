@@ -3,29 +3,7 @@ import { TraceLoopPromptExecutor } from "../src/TraceLoopPromptExecutor";
 import * as traceloop from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
 
-describe("TraceLoopPromptExecutor", () => {
-  let executor: TraceLoopPromptExecutor;
-
-  beforeAll(async () => {
-    traceloop.initialize({
-      appName: "promptexexutortest",
-      apiKey: process.env.TRACELOOP_API_KEY,
-      disableBatch: true,
-      traceloopSyncEnabled: true,
-      instrumentModules: {
-        openAI: OpenAI,
-      },
-    });
-
-    await traceloop.waitForInitialization();
-
-    // Instantiate the class which uses the mocked OpenAI
-    executor = new TraceLoopPromptExecutor();
-  });
-
-  it("should execute a prompt without properties and return the content", async () => {
-    const promptName = "extractSearchFromJob";
-    const jobDescription = `DevOps Senior
+const jobDescriptionDevOps = `DevOps Senior
 
 Требования:
 ●Spark
@@ -48,9 +26,36 @@ describe("TraceLoopPromptExecutor", () => {
 ●I&D. Разработка мониторинга сервисов и инфраструктуры.
 `;
 
-    const variables = { jobDescription };
+describe("TraceLoopPromptExecutor", () => {
+  let executor: TraceLoopPromptExecutor;
 
-    const result = await executor.execute(promptName, variables, process.env.OPENAI_MODEL);
+  beforeAll(async () => {
+    traceloop.initialize({
+      appName: "promptexexutortest",
+      apiKey: process.env.TRACELOOP_API_KEY,
+      disableBatch: true,
+      traceloopSyncEnabled: true,
+      instrumentModules: {
+        openAI: OpenAI,
+      },
+    });
+
+    await traceloop.waitForInitialization();
+
+    // Instantiate the class which uses the mocked OpenAI
+    executor = new TraceLoopPromptExecutor();
+  });
+
+  it("should execute a prompt without properties and return the content", async () => {
+    const promptName = "extractSearchFromJob";
+
+    const variables = { jobDescription: jobDescriptionDevOps };
+
+    const result = await executor.execute<string>(
+      promptName,
+      variables,
+      process.env.OPENAI_MODEL
+    );
 
     expect(result).not.toBeNull();
     // The AI's response can be non-deterministic, so we check for keywords instead of a strict match.

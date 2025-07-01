@@ -8,10 +8,10 @@ export abstract class PromptExecutor {
      * @param properties Optional association properties for tracing.
      * @returns The content of the language model's response.
      */
-    abstract execute(
+    abstract execute<T>(
         promptName: string,
         variables: Record<string, string>,
         model?: string,
         properties?: Record<string, string>,
-    ): Promise<string | null>;
+    ): Promise<T | null>;
 }
