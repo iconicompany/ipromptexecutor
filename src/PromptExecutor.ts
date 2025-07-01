@@ -1,4 +1,5 @@
 import { type Parser } from "./Parser";
+import { type ZodType } from "zod";
 export abstract class PromptExecutor {
   /**
    * Executes a prompt and returns the result from the language model.
@@ -16,4 +17,5 @@ export abstract class PromptExecutor {
     parser?: Parser<T>,
     properties?: Record<string, string>
   ): Promise<T | null>;
+
 }

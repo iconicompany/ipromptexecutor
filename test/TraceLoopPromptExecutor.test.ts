@@ -1,157 +1,96 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { TraceLoopPromptExecutor } from "../src/TraceLoopPromptExecutor";
 import * as traceloop from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
-import type {
-  ChatCompletion,
-  ChatCompletionCreateParams,
-} from "openai/resources/chat/completions";
 import { JsonParser } from "../src/Parser";
 
-vi.mock("@traceloop/node-server-sdk");
-vi.mock("openai", () => {
-  const OpenAI = vi.fn().mockImplementation(() => ({
-    chat: {
-      completions: {
-        create: vi.fn(),
+const jobDescriptionDevOps = `DevOps Senior
+
+Требования:
+●Spark
+●Kubernetes
+●Docker - от 2х лет
+●K8S - от 1 года
+●Linux - от 2х лет
+●Cloud - от 1 года
+●Terraform - от 1 года
+●Средства ML: sklearn, tensorflow будут плюсом
+
+Задачи:
+●Перевод с Managed Yandex.Cloud в Kubernetes, шифрация данных, создание прод. среды, конвейеров, CI/CD, помощь в настройке мониторинга и разработка Spark скриптов.
+●Миграция из Managed Service в собственные Kubernetes
+●Разработка CI/CD конвейеров. 1 DevOps/1 DE
+●Разработка модулей для Alluxio.
+●I&D. Разработка модулей для поддержки промышленной системы.
+●Разработка модулей межсервисного шифрования.
+●Разработка общего метахранилища.
+●I&D. Разработка мониторинга сервисов и инфраструктуры.
+`;
+
+describe("TraceLoopPromptExecutor", () => {
+  beforeAll(async () => {
+    traceloop.initialize({
+      appName: "promptexecutortest",
+      apiKey: process.env.TRACELOOP_API_KEY,
+      disableBatch: true,
+      traceloopSyncEnabled: true,
+      instrumentModules: {
+        openAI: OpenAI,
       },
-    },
-  }));
-  return { default: OpenAI, OpenAI };
-});
+    });
 
-describe.skip("TraceLoopPromptExecutor", () => {
-  let executor: TraceLoopPromptExecutor;
-  let mockOpenAI: OpenAI;
-
-  const mockPrompt: ChatCompletionCreateParams = {
-    model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: "Hello, {{name}}" }],
-  };
-
-  const mockChatCompletion: ChatCompletion = {
-    id: "chatcmpl-123",
-    object: "chat.completion",
-    created: 1677652288,
-    model: "gpt-3.5-turbo",
-    choices: [
-      {
-        index: 0,
-        message: {
-          role: "assistant",
-          content: "Hello, World!",
-        },
-        finish_reason: "stop",
-      },
-    ],
-    usage: {
-      prompt_tokens: 9,
-      completion_tokens: 12,
-      total_tokens: 21,
-    },
-  };
-
-  beforeEach(() => {
-    mockOpenAI = new OpenAI();
-
-    // Mock implementations
-    vi.mocked(traceloop.getPrompt).mockReturnValue(
-      JSON.parse(JSON.stringify(mockPrompt)),
-    ); // deep copy
-    vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockChatCompletion as any,
-    ); // The mock is simplified
-    vi.mocked(traceloop.withAssociationProperties).mockImplementation(
-      async (properties, fn) => {
-        return fn();
-      },
-    );
+    await traceloop.waitForInitialization();
 
     // Instantiate the class which uses the mocked OpenAI
-    executor = new TraceLoopPromptExecutor();
-    (executor as any).openai = mockOpenAI;
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+  it("should execute a prompt extractSearchFromJob and return the content", async () => {
+    const executor = new TraceLoopPromptExecutor();
 
-  it("should execute a prompt without properties and return the content", async () => {
-    const promptName = "test-prompt";
-    const variables = { name: "World" };
+    const promptName = "extractSearchFromJob";
+    const modelName = process.env.OPENAI_MODEL;
 
-    const result = await executor.execute<string>(promptName, variables);
-
-    expect(traceloop.getPrompt).toHaveBeenCalledWith(promptName, variables);
-    expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(mockPrompt);
-    expect(traceloop.withAssociationProperties).not.toHaveBeenCalled();
-    expect(result).toBe("Hello, World!");
-  });
-
-  it("should execute a prompt with properties and return the content", async () => {
-    const promptName = "test-prompt";
-    const variables = { name: "World" };
-    const properties = { userId: "123" };
+    const variables = { jobDescription: jobDescriptionDevOps };
 
     const result = await executor.execute<string>(
       promptName,
       variables,
-      undefined,
-      properties,
+      modelName
     );
 
-    expect(traceloop.getPrompt).toHaveBeenCalledWith(promptName, variables);
-    expect(traceloop.withAssociationProperties).toHaveBeenCalledWith(
-      properties,
-      expect.any(Function),
-    );
-    expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(mockPrompt);
-    expect(result).toBe("Hello, World!");
+    expect(result).not.toBeNull();
+    // The AI's response can be non-deterministic, so we check for keywords instead of a strict match.
+    if (result) {
+      expect(result).toContain("DevOps");
+      expect(result).toContain("Spark");
+      expect(result).toContain("Docker");
+      expect(result).toContain("Linux");
+      expect(result).toContain("Cloud");
+      expect(result).toContain("Terraform");
+      expect(result).toContain("CI/CD");
+      expect(result).toContain("Alluxio");
+    }
   });
+  it("should execute a prompt extractSkillsFromJob and return the content", async () => {
+    const executor = new TraceLoopPromptExecutor();
 
-  it("should override the model if provided", async () => {
-    const promptName = "test-prompt";
-    const variables = { name: "World" };
-    const model = "gpt-4";
+    const promptName = "extractSkillsFromJob";
+    const modelName = process.env.OPENAI_MODEL;
 
-    await executor.execute<string>(promptName, variables, model);
+    const variables = { jobDescription: jobDescriptionDevOps };
 
-    const expectedPrompt = { ...mockPrompt, model };
-    expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
-      expectedPrompt,
-    );
-  });
-
-  it("should use the provided parser if available", async () => {
-    const promptName = "test-prompt";
-    const variables = { name: "World" };
-    const jsonString = '{"greeting": "Hello, World!"}';
-    const mockJsonParser = new JsonParser<{ greeting: string }>();
-    const spy = vi.spyOn(mockJsonParser, "parse");
-
-    // Adjust mock to return JSON string
-    vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue({
-      ...mockChatCompletion,
-      choices: [
-        {
-          ...mockChatCompletion.choices[0],
-          message: {
-            ...mockChatCompletion.choices[0].message,
-            content: jsonString,
-          },
-        },
-      ],
-    } as any);
-
-    const result = await executor.execute<{ greeting: string }>(
+    const result = await executor.execute<any>(
       promptName,
       variables,
-      undefined,
-      mockJsonParser,
-      undefined,
+      modelName,
+      new JsonParser()
     );
 
-    expect(spy).toHaveBeenCalledWith(jsonString);
-    expect(result).toEqual({ greeting: "Hello, World!" });
+    expect(result).not.toBeNull();
+    // The AI's response can be non-deterministic, so we check for keywords instead of a strict match.
+    if (result) {
+      expect(result.Docker).toBe(2);
+      expect(result.Terraform).toBe(1);
+    }
   });
 });
