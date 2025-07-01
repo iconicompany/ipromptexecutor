@@ -6,6 +6,7 @@ import type {
   ChatCompletion,
   ChatCompletionCreateParams,
 } from "openai/resources/chat/completions";
+import { JsonParser } from "../src/Parser";
 
 vi.mock("@traceloop/node-server-sdk");
 vi.mock("openai", () => {
@@ -119,5 +120,38 @@ describe.skip("TraceLoopPromptExecutor", () => {
     expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
       expectedPrompt,
     );
+  });
+
+  it("should use the provided parser if available", async () => {
+    const promptName = "test-prompt";
+    const variables = { name: "World" };
+    const jsonString = '{"greeting": "Hello, World!"}';
+    const mockJsonParser = new JsonParser<{ greeting: string }>();
+    const spy = vi.spyOn(mockJsonParser, "parse");
+
+    // Adjust mock to return JSON string
+    vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue({
+      ...mockChatCompletion,
+      choices: [
+        {
+          ...mockChatCompletion.choices[0],
+          message: {
+            ...mockChatCompletion.choices[0].message,
+            content: jsonString,
+          },
+        },
+      ],
+    } as any);
+
+    const result = await executor.execute<{ greeting: string }>(
+      promptName,
+      variables,
+      undefined,
+      mockJsonParser,
+      undefined,
+    );
+
+    expect(spy).toHaveBeenCalledWith(jsonString);
+    expect(result).toEqual({ greeting: "Hello, World!" });
   });
 });

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { TraceLoopPromptExecutor } from "../src/TraceLoopPromptExecutor";
 import * as traceloop from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
+import { JsonParser } from "../src/Parser";
 
 const jobDescriptionDevOps = `DevOps Senior
 
@@ -47,13 +48,14 @@ describe("TraceLoopPromptExecutor", () => {
     const executor = new TraceLoopPromptExecutor();
 
     const promptName = "extractSearchFromJob";
+    const modelName = process.env.OPENAI_MODEL;
 
     const variables = { jobDescription: jobDescriptionDevOps };
 
     const result = await executor.execute<string>(
       promptName,
       variables,
-      process.env.OPENAI_MODEL
+      modelName
     );
 
     expect(result).not.toBeNull();
@@ -67,6 +69,28 @@ describe("TraceLoopPromptExecutor", () => {
       expect(result).toContain("Terraform");
       expect(result).toContain("CI/CD");
       expect(result).toContain("Alluxio");
+    }
+  });
+  it("should execute a prompt extractSkillsFromJob and return the content", async () => {
+    const executor = new TraceLoopPromptExecutor();
+
+    const promptName = "extractSkillsFromJob";
+    const modelName = process.env.OPENAI_MODEL;
+
+    const variables = { jobDescription: jobDescriptionDevOps };
+
+    const result = await executor.execute<any>(
+      promptName,
+      variables,
+      modelName,
+      new JsonParser()
+    );
+
+    expect(result).not.toBeNull();
+    // The AI's response can be non-deterministic, so we check for keywords instead of a strict match.
+    if (result) {
+      expect(result.Docker).toBe(2);
+      expect(result.Terraform).toBe(1);
     }
   });
 });
