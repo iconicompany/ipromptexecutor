@@ -1,0 +1,21 @@
+{
+  "name": "promptexecutor",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "dotenv": "^17.0.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@traceloop/node-server-sdk": "^0.13.5",
+    "openai": "^5.8.2"
+  }
+}
