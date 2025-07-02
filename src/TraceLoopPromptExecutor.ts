@@ -2,13 +2,13 @@ import * as traceloop from "@traceloop/node-server-sdk";
 import { PromptExecutor } from "./PromptExecutor";
 import type { ChatCompletionCreateParams } from "openai/resources/chat/completions";
 import OpenAI from "openai";
-import { TextParser, type Parser } from "./Parser";
+import { DefaultParser, type Parser } from "./Parser";
 
 export class TraceLoopPromptExecutor extends PromptExecutor {
   protected openai: OpenAI;
   protected parser: Parser<any>;
 
-  constructor(parser: Parser<any> = new TextParser()) {
+  constructor(parser: Parser<any> = new DefaultParser()) {
     super();
     this.openai = new OpenAI();
     this.parser = parser;

@@ -79,7 +79,7 @@ describe("TraceLoopPromptExecutor", () => {
 
     const variables = { jobDescription: jobDescriptionDevOps };
 
-    const result = await executor.execute<any>(
+    const result = await executor.execute<Record<string, number>>(
       promptName,
       variables,
       modelName,
