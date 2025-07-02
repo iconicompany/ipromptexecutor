@@ -1,7 +1,7 @@
 {
   "name": "ipromptexecutor",
-  "version": "1.0.1",
-  "module": "src/index.ts",
+  "version": "1.0.2",
+  "main": "src/index.ts",
   "type": "module",
   "files": [
     "src"
